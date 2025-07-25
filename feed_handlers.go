@@ -4,30 +4,75 @@ import (
 	"fmt"
 	"time"
 	"context"
+	"errors"
+	"database/sql"
 	"github.com/google/uuid"
 	
 	"github.com/alaw22/blog_aggregator/internal/database"
 )
 
-func handlerAgg(s *state, cmd command) error {
-	const testURL = "https://www.wagslane.dev/index.xml"
+func scrapeFeeds(s *state) error {
+	feed, err := s.db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		return fmt.Errorf("Error in GetNextFeedToFetch(): %w\n",err)
+	}
 
-	rssFeed, err := fetchFeed(context.Background(), testURL)
+	markFeedFetchedParams := database.MarkFeedFetchedParams{
+		LastFetchedAt: sql.NullTime{
+			Time: time.Now().UTC(),
+			Valid: true,
+		},
+		ID: feed.ID,
+	}
+
+	err = s.db.MarkFeedFetched(context.Background(),markFeedFetchedParams)	
+	if err != nil {
+		return fmt.Errorf("Couldn't mark feed '%s' as fetched: %w\n",feed.Name,err)
+	}
+
+	fmt.Printf("Feed '%s' was successfully fetched and marked as such\n\n",feed.Name)
+
+	rssFeed, err := fetchFeed(context.Background(), feed.Url)
+	if err != nil {
+		return fmt.Errorf("Unable to fetch feed '%s': %w\n",feed.Name,err)
+	}
+	
+	fmt.Printf("Title: %s\nLink: %s\nDescription: %s\n\n",
+			   rssFeed.Channel.Title,
+			   rssFeed.Channel.Link,
+			   rssFeed.Channel.Description)
+	
+	for i, item := range rssFeed.Channel.Item {
+		fmt.Printf("[%03d] Title: %s\n", i, item.Title)
+	}
+
+
+	fmt.Print("\n-----------------------------------------------\n")
+
+
+
+	return nil
+
+
+}
+
+func handlerAgg(s *state, cmd command) error {
+	if len(cmd.args) == 0 {
+		return errors.New("Expected time_between_requests argument")
+	}
+
+	time_string := cmd.args[0]
+
+	time_between_requests, err := time.ParseDuration(time_string)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Title:%s\nLink:%s\nDescription:%s\n",
-			   rssFeed.Channel.Title,
-			   rssFeed.Channel.Link,
-			   rssFeed.Channel.Description)
-	for i, item := range rssFeed.Channel.Item {
+	fmt.Printf("Collecting feeds every %v\n", time_between_requests)
 
-		fmt.Printf("[%02d]\nTitle:%s\nLink:%s\nDescription:%s\n",
-				i,
-				item.Title,
-				item.Link,
-				item.Description)
+	ticker := time.NewTicker(time_between_requests)
+	for ; ; <-ticker.C {
+		scrapeFeeds(s)
 	}
 
 	return nil
