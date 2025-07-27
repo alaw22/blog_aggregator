@@ -7,16 +7,56 @@ import (
 	"errors"
 	"database/sql"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	
 	"github.com/alaw22/blog_aggregator/internal/database"
 )
+
+const duplicateErrorCode = "23505"
+
+var timeLayouts = []string{	
+	time.Layout,      
+	time.ANSIC,       
+	time.UnixDate,    
+	time.RubyDate,    
+	time.RFC822,      
+	time.RFC822Z,     
+	time.RFC850,      
+	time.RFC1123,     
+	time.RFC1123Z,    
+	time.RFC3339,     
+	time.RFC3339Nano, 
+	time.Kitchen,     
+	time.Stamp,
+	time.StampMilli,
+	time.StampMicro,
+	time.StampNano,
+	time.DateTime,
+	time.DateOnly,
+	time.TimeOnly,
+}
+
+func matchTimeLayout(timeString string) (time.Time, error) {
+	t := time.Time{}
+
+	for _, layout := range timeLayouts {
+		t, err := time.Parse(layout,timeString)
+		if err == nil {
+			return t, nil
+		}
+	}
+
+	return t, errors.New("Unable to parse time string")
+
+}
+
 
 func scrapeFeeds(s *state) error {
 	feed, err := s.db.GetNextFeedToFetch(context.Background())
 	if err != nil {
 		return fmt.Errorf("Error in GetNextFeedToFetch(): %w\n",err)
 	}
-
+	
 	markFeedFetchedParams := database.MarkFeedFetchedParams{
 		LastFetchedAt: sql.NullTime{
 			Time: time.Now().UTC(),
@@ -24,26 +64,69 @@ func scrapeFeeds(s *state) error {
 		},
 		ID: feed.ID,
 	}
-
+	
 	err = s.db.MarkFeedFetched(context.Background(),markFeedFetchedParams)	
 	if err != nil {
 		return fmt.Errorf("Couldn't mark feed '%s' as fetched: %w\n",feed.Name,err)
 	}
-
-	fmt.Printf("Feed '%s' was successfully fetched and marked as such\n\n",feed.Name)
-
+	
 	rssFeed, err := fetchFeed(context.Background(), feed.Url)
 	if err != nil {
 		return fmt.Errorf("Unable to fetch feed '%s': %w\n",feed.Name,err)
 	}
 	
-	fmt.Printf("Title: %s\nLink: %s\nDescription: %s\n\n",
-			   rssFeed.Channel.Title,
-			   rssFeed.Channel.Link,
-			   rssFeed.Channel.Description)
+	fmt.Printf("Feed '%s' was successfully fetched and marked as such\n\n",feed.Name)
 	
+	
+	fmt.Printf("Title: %s\nLink: %s\nDescription: %s\n\n",
+	rssFeed.Channel.Title,
+	rssFeed.Channel.Link,
+	rssFeed.Channel.Description)
+	
+
+	var pq_error *pq.Error
+
 	for i, item := range rssFeed.Channel.Item {
-		fmt.Printf("[%03d] Title: %s\n", i, item.Title)
+
+		PubDateTime, err := matchTimeLayout(item.PubDate)
+		if err != nil {
+			return fmt.Errorf("Error parsing PubDate: %w\n",err)
+		}
+		
+		fmt.Printf("[%03d] Title: %s PubTime: %v\n",
+		i,
+		item.Title,
+		PubDateTime)
+		
+		
+		postParams := database.CreatePostParams{
+			ID: uuid.New(),
+			CreatedAt: time.Now().UTC(),
+			UpdatedAt: time.Now().UTC(),
+			Title: item.Title,
+			Url: item.Link,
+			Description: sql.NullString{
+				String: item.Description,
+				Valid: true,
+			},
+			PublishedAt: PubDateTime,
+			FeedID: feed.ID,
+		}
+
+
+		post, err := s.db.CreatePost(context.Background(), postParams)
+		if err != nil {
+			ok := errors.As(err, &pq_error)
+			// Ignore posts that have already been saved
+			if ok && pq_error.Code == duplicateErrorCode {
+				continue
+			}
+
+			return fmt.Errorf("Unable to insert row: %w\n",err)
+		}
+
+		fmt.Println(post.ID)
+
 	}
 
 
@@ -97,6 +180,7 @@ func handlerAddFeed(s *state, cmd command, user database.User) error {
 
 	_, err := s.db.CreateFeed(context.Background(),feedParams)
 	if err != nil {
+		// fmt.Printf("As? %v\n",errors.As(err,pq.Error{}))
 		return err
 	}
 
