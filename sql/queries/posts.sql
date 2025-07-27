@@ -12,7 +12,7 @@ VALUES (
 )
 RETURNING *;
 
--- name: GetPostForUser :many
+-- name: GetPostsForUser :many
 SELECT 
     posts.id,
     posts.created_at,

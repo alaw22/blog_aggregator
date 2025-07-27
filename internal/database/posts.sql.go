@@ -64,7 +64,7 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 	return i, err
 }
 
-const getPostForUser = `-- name: GetPostForUser :many
+const getPostsForUser = `-- name: GetPostsForUser :many
 SELECT 
     posts.id,
     posts.created_at,
@@ -82,13 +82,13 @@ ORDER BY posts.published_at DESC
 LIMIT $2
 `
 
-type GetPostForUserParams struct {
+type GetPostsForUserParams struct {
 	UserID uuid.UUID
 	Limit  int32
 }
 
-func (q *Queries) GetPostForUser(ctx context.Context, arg GetPostForUserParams) ([]Post, error) {
-	rows, err := q.db.QueryContext(ctx, getPostForUser, arg.UserID, arg.Limit)
+func (q *Queries) GetPostsForUser(ctx context.Context, arg GetPostsForUserParams) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, getPostsForUser, arg.UserID, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
