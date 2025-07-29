@@ -7,7 +7,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	
-	"github.com/alaw22/blog_aggregator/internal/database"
+	"github.com/alaw22/gator/internal/database"
 )
 
 func handlerLogin(s *state, cmd command) error {

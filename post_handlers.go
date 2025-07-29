@@ -5,7 +5,7 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/alaw22/blog_aggregator/internal/database"
+	"github.com/alaw22/gator/internal/database"
 )
 
 func handlerBrowse(s *state, cmd command, user database.User) error {

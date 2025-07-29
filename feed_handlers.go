@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	
-	"github.com/alaw22/blog_aggregator/internal/database"
+	"github.com/alaw22/gator/internal/database"
 )
 
 const duplicateErrorCode = "23505"

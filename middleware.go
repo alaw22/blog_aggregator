@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/alaw22/blog_aggregator/internal/database"
+	"github.com/alaw22/gator/internal/database"
 )
 
 func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
