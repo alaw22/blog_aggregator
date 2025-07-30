@@ -1,9 +1,13 @@
 # Gator
 
 `gator` is an RSS Feed aggregator built in Go. It uses `PostgreSQL` to store 
+shortened versions of posts made by websites so you can keep up with your 
+favorite feeds! 
 
 
 # Installation
+
+There are a few prerequisites before we can get you up and moving.
 
 ## Go
 As mentioned this application is built with Go so if you don't already have the latest version of go installed you can go to
@@ -11,7 +15,7 @@ As mentioned this application is built with Go so if you don't already have the 
 to download it (they have installation guides for every platform).
 
 Once you have the go toolchain installed check to see that it
-set you path environment variable appropriately by typing
+set your path environment variable appropriately by typing
 
 ```bash
 go version
@@ -70,7 +74,8 @@ sudo passwd postgres
 
 - Mac: `psql postgres`
 - Linux: `sudo -u postgres psql`
-- Windows: `psql -p <port_number> -U postgres`
+- Windows: `psql -p <port_number> -U postgres` (if you used default port
+-- 5432 -- you won't have to worry about using the `-p` option)
 
 ### Create Gator Database
 
@@ -92,7 +97,7 @@ To connect to the database:
 ALTER USER postgres PASSWORD 'postgres';
 ```
 
-To exit you can just type `exit` to leave the shell.
+To exit the shell you can just type `exit`.
 
 ### Connection String
 
@@ -109,6 +114,8 @@ The protocol for us would be `postgres` so an example would be:
 postgres://postgres:postgres@localhost:5432/gator
 ```
 
+Use whatever username and password you made when setting up the server. The 
+default is postgres user I believe.
 
 ## Clone Repo
 
@@ -126,7 +133,7 @@ git clone https://github.com/alaw22/gator
 ## Goose
 
 [`goose`](https://github.com/pressly/goose) is a SQL migration application. I
-have set up my SQL schema directory to comply with `goose` required formatting.
+have set up my `sql/schema` directory to comply with `goose` required formatting.
 
 ```
 go install github.com/pressly/goose/v3/cmd/goose@latest
@@ -138,7 +145,7 @@ Again you can check to make sure this installation works:
 goose --version
 ```
 
-Once you have `goose` installed you can make sure you are in the base directory
+Once you have `goose` installed, make sure you are in the base directory
 "gator" and type:
 
 ```
@@ -198,6 +205,10 @@ In it you need to place your database connection URL in JSON format:
 
 Remember this can be whatever you set up as the username, password, and port.
 The query at the end is to make sure we aren't using ssl to connect locally.
+
+
+# Usage
+
 
 
 <!-- # Welcome to the Blog Aggregator
