@@ -209,6 +209,117 @@ The query at the end is to make sure we aren't using ssl to connect locally.
 
 # Usage
 
+To get started register your user!
+
+```bash
+gator register <your_username>
+
+# sample output
+# User 'bob' has been set
+```
+
+This will register you as a user in the users table and log you in.
+
+
+Adding a feed, will automatically follow that feed for the logged in user:
+
+```bash
+gator addfeed <feed_name> <feed_url>
+
+# sample output
+# Feed entry made for https://techcrunch.com/feed/
+# You are now following Tech Crunch
+```
+
+Aggregating feeds for logged in user:
+
+```bash
+gator agg <frequency_time_format> # ex: 10s will aggregate a feed every 10 seconds
+```
+
+The `frequency_time_format` argument must be in the format `#h#m#s` for example
+if you wanted to aggregate user feeds every hour 1 minute and 9 seconds then 
+you would type:
+
+```bash
+gator agg 1h1m9s
+```
+
+To browse posts from your following feeds:
+
+```bash
+gator browse [post_limit] # if no post_limit is sent then the limit is 2 posts
+
+# sample output
+# Here are the 2 most recent posts:
+
+# Title: Our $100M Series B
+# Published: 2025-07-30 13:17:28 +0000 +0000
+# URL: https://oxide.computer/blog/our-100m-series-b
+# Description:
+#         <a href="https://news.ycombinator.com/item?id=44733817">Comments</a>
+
+# ----------------------------------------
+# Title: I launched 17 side projects. Result? I'm rich in expired domains
+# Published: 2025-07-30 13:15:35 +0000 +0000
+# URL: https://news.ycombinator.com/item?id=44733800
+# Description:
+#         <a href="https://news.ycombinator.com/item?id=44733800">Comments</a>
+
+# ----------------------------------------
+```
+
+
+## Other commands
+
+List users:
+
+```bash
+gator users
+
+# sample output
+# * bob
+# * billy (current)
+```
+
+List feeds:
+
+```bash
+feeds
+
+# sample output
+# Name: Tech Crunch
+# URL: https://techcrunch.com/feed/
+# Username: bob
+# Name: Hacker News
+# URL: https://news.ycombinator.com/rss
+# Username: billy
+```
+
+List feeds current user is following:
+
+```bash
+gator following
+
+# sample output
+# You are following these feeds:
+#  - Hacker News
+```
+
+You can follow or unfollow a feed:
+
+```bash
+gator follow <feed_url>
+
+# sample output
+# You are now following Tech Crunch
+
+gator unfollow <feed_url>
+
+# sample output
+# Successfully unfollowed feed: https://techcrunch.com/feed/
+```
+
 
 
 <!-- # Welcome to the Blog Aggregator
