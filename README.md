@@ -199,7 +199,7 @@ In it you need to place your database connection URL in JSON format:
 
 ```
 {
-    "db_url":"postgres://postgres:postgres@localhost:5432/gator?sslmode=disable
+    "db_url":"postgres://postgres:postgres@localhost:5432/gator?sslmode=disable"
 }
 ```
 
